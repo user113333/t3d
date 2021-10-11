@@ -1,0 +1,10 @@
+all:
+	cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -B ./bin .
+	ninja -C bin
+
+release:
+	cmake -DCMAKE_BUILD_TYPE=Release -G Ninja -B ./bin .
+	ninja -C bin
+
+copy:
+	xcopy /S /I /Y /F "res" "bin/res"

@@ -1,0 +1,12 @@
+[submodule "lib/assimp"]
+	path = lib/assimp
+	url = https://github.com/assimp/assimp
+[submodule "lib/flags"]
+	path = lib/flags
+	url = https://github.com/sailormoon/flags
+[submodule "lib/glm"]
+	path = lib/glm
+	url = https://github.com/g-truc/glm
+[submodule "lib/json"]
+	path = lib/json
+	url = https://github.com/nlohmann/json
