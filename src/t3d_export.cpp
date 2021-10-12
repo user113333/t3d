@@ -14,10 +14,7 @@
 #include "json.hpp"
 
 #include "Core.h"
-
-struct Vertex {
-    glm::vec3 pos;
-};
+#include "Vertex.h"
 
 struct Mesh {
     std::vector<Vertex> vertices;

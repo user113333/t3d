@@ -19,6 +19,7 @@ set(INCLUDE
     "lib/flags/include"
     "lib/glm"
     "lib/json/single_include/nlohmann"
+    "include"
 )
 
 set(MAIN_SOURCES
