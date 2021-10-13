@@ -15,7 +15,6 @@
 
 #include "Core.h"
 
-#define JSON_IMPLEMENTATION
 #include "Vertex.h"
 #include "TextureCPU.h"
 

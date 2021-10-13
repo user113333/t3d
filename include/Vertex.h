@@ -8,13 +8,16 @@ struct Vertex {
     glm::vec2 texture_coords;
 };
 
-#ifdef JSON_IMPLEMENTATION
-
 #include "json.hpp"
 
 using namespace nlohmann;
 
-inline void to_json(json& JSON, const Vertex& v) {
+extern void to_json(json& JSON, const Vertex& v);
+extern void from_json(const json& JSON, Vertex& v);
+
+#ifdef JSON_IMPLEMENTATION
+
+void to_json(json& JSON, const Vertex& v) {
     JSON = {
         { "pos", {
             { "x", v.pos.x }, { "y", v.pos.y }, { "z", v.pos.z }
@@ -25,7 +28,7 @@ inline void to_json(json& JSON, const Vertex& v) {
     };
 }
 
-inline void from_json(const json& JSON, Vertex& v) {
+void from_json(const json& JSON, Vertex& v) {
     json j_pos = JSON.at("pos");
     j_pos.at("x").get_to(v.pos.x);
     j_pos.at("y").get_to(v.pos.y);

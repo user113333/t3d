@@ -1,5 +1,9 @@
 #include "Util.h"
 
+#define JSON_IMPLEMENTATION
+#include "Vertex.h"
+#include "TextureCPU.h"
+
 std::string GetDir(std::string& path) {
     std::size_t lo = path.find_last_of("/\\");
 
