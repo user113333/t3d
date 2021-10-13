@@ -122,7 +122,7 @@ std::vector<TextureCPU> LoadMaterialTextures(aiMaterial *mat, aiTextureType type
         mat->GetTexture(type, i, &str);
         
         TextureCPU texture;
-        texture.type = type;
+        texture.texture_type = type;
         LoadImage(str.C_Str(), texture);
         
         textures.push_back(texture);
@@ -137,13 +137,13 @@ void LoadImage(std::string path, TextureCPU& tex) {
     unsigned char* data = stbi_load((directory + "/" + path).c_str(), &x, &y, &ch_count, 0);
 
     switch (ch_count) {
-        case 3: tex.type = 0x1907; break; // GL_RGB
-        case 4: tex.type = 0x1908; break; // GL_RGBA
+        case 3: tex.gl_format = 0x1907; break; // GL_RGB
+        case 4: tex.gl_format = 0x1908; break; // GL_RGBA
         
         default: ERROR << "unknown texture GLType (" << path << ")" << std::endl;
     }
 
-    tex.gl_format = 0x1401; // GL_UNSIGNED_BYTE
+    tex.data_type = 0x1401; // GL_UNSIGNED_BYTE
     tex.width = x;
     tex.height = y;
 
