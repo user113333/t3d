@@ -10,15 +10,20 @@
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <stb_image.h>
 
 #include "json.hpp"
+#include "base64.h"
 
 #include "Core.h"
+#include "Util.h"
 
 #include "Vertex.h"
 #include "TextureCPU.h"
 
 using namespace nlohmann;
+
+static std::string directory;
 
 struct Mesh {
     std::vector<Vertex> vertices;
@@ -34,6 +39,7 @@ void LoadModel(std::string const &path, Model& model);
 void ProcessNode(aiNode *node, const aiScene *scene, Model& model);
 Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene);
 std::vector<TextureCPU> LoadMaterialTextures(aiMaterial *mat, aiTextureType type);
+void LoadImage(std::string path, TextureCPU& tex);
 
 void LoadModel(std::string const &path, Model& model) {
     Assimp::Importer importer;
@@ -116,8 +122,8 @@ std::vector<TextureCPU> LoadMaterialTextures(aiMaterial *mat, aiTextureType type
         mat->GetTexture(type, i, &str);
         
         TextureCPU texture;
-        texture.path = str.C_Str();
         texture.type = type;
+        LoadImage(str.C_Str(), texture);
         
         textures.push_back(texture);
     }
@@ -125,8 +131,27 @@ std::vector<TextureCPU> LoadMaterialTextures(aiMaterial *mat, aiTextureType type
     return textures;
 }
 
+void LoadImage(std::string path, TextureCPU& tex) {
+    int x, y, ch_count;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load((directory + "/" + path).c_str(), &x, &y, &ch_count, 0);
+
+    switch (ch_count) {
+        case 3: tex.type = 0x1907; break; // GL_RGB
+        case 4: tex.type = 0x1908; break; // GL_RGBA
+        
+        default: ERROR << "unknown texture GLType (" << path << ")" << std::endl;
+    }
+
+    tex.gl_format = 0x1401; // GL_UNSIGNED_BYTE
+    tex.width = x;
+    tex.height = y;
+
+    tex.data_base64 = base64_encode(data, x * y * ch_count);
+}
 
 void t3d_export(std::string input_file, std::string output_file) {
+    directory = GetDir(input_file);
     Model model;
     json j;
     

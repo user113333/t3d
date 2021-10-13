@@ -4,6 +4,9 @@
 #include "Vertex.h"
 #include "TextureCPU.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 std::string GetDir(std::string& path) {
     std::size_t lo = path.find_last_of("/\\");
 

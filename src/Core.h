@@ -1,4 +1,4 @@
 #pragma once
 
 #define SUFFIX ".t3d"
-#define ERROR std::cerr << "Error: "
+#define ERROR std::cout << "Error: "
