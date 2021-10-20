@@ -1,9 +1,5 @@
 #include "Util.h"
 
-#define JSON_IMPLEMENTATION
-#include "Vertex.h"
-#include "TextureCPU.h"
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
