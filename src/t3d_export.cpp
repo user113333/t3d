@@ -35,7 +35,7 @@ void LoadImage(std::string path, Texture& tex);
 
 void LoadModel(std::string const &path, Model& model) {
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_SortByPType);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         ERROR << importer.GetErrorString() << std::endl;
@@ -82,6 +82,10 @@ Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene) {
 
     for (int i = 0; i < mesh->mNumFaces; i++) {
         aiFace face = mesh->mFaces[i];
+
+        if (face.mNumIndices != 3) {
+            ERROR << face.mNumIndices << std::endl;
+        }
 
         for (unsigned int j = 0; j < face.mNumIndices; j++)
             indices.push_back(face.mIndices[j]);

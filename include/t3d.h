@@ -4,8 +4,8 @@
 
 #define T3D_VERSION 0
 
-void t3d_serialize(const char* file_path, t3d::Model& model);
-void t3d_parse(const char* file_path, t3d::Model& model);
+bool t3d_serialize(const char* file_path, t3d::Model& model);
+bool t3d_parse(const char* file_path, t3d::Model& model);
 
 #ifdef T3D_IMPLEMENTATION
 
@@ -22,12 +22,12 @@ struct file_mesh {
     uint16_t index_count;
 };
 
-void t3d_serialize(const char* file_path, t3d::Model& model) {
+bool t3d_serialize(const char* file_path, t3d::Model& model) {
     std::ofstream file;
     file.open(file_path, std::ios::trunc | std::ios::binary);
 
     if (!file.is_open()) {
-        return;
+        return true;
     }
 
     file_desc desc;
@@ -52,14 +52,15 @@ void t3d_serialize(const char* file_path, t3d::Model& model) {
     }
 
     file.close();
+    return false;
 }
 
-void t3d_parse(const char* file_path, t3d::Model& model) {
+bool t3d_parse(const char* file_path, t3d::Model& model) {
     std::ifstream file;
     file.open(file_path, std::ios::in | std::ios::binary);
 
     if (!file.is_open()) {
-        return;
+        return true;
     }
 
     file_desc desc;
@@ -84,6 +85,7 @@ void t3d_parse(const char* file_path, t3d::Model& model) {
     }
 
     file.close();
+    return false;
 }
 
 #endif
