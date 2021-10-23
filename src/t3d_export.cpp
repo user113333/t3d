@@ -35,7 +35,7 @@ void LoadImage(std::string path, Texture& tex);
 
 void LoadModel(std::string const &path, Model& model) {
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_SortByPType);
+    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_FlipUVs); // TODO: aiProcess_SortByPType -> lines + points
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         ERROR << importer.GetErrorString() << std::endl;
@@ -84,7 +84,7 @@ Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene) {
         aiFace face = mesh->mFaces[i];
 
         if (face.mNumIndices != 3) {
-            ERROR << face.mNumIndices << std::endl;
+            ERROR << "non triangle primitive detected: "  << face.mNumIndices << std::endl;
         }
 
         for (unsigned int j = 0; j < face.mNumIndices; j++)

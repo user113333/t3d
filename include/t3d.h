@@ -2,7 +2,7 @@
 
 #include "Model.h"
 
-#define T3D_VERSION 0
+#define T3D_VERSION 1
 
 bool t3d_serialize(const char* file_path, t3d::Model& model);
 bool t3d_parse(const char* file_path, t3d::Model& model);
@@ -14,12 +14,12 @@ bool t3d_parse(const char* file_path, t3d::Model& model);
 
 struct file_desc {
     uint8_t version;
-    uint8_t meshes_count;
+    uint16_t meshes_count;
 };
 
 struct file_mesh {
-    uint16_t vertex_count;
-    uint16_t index_count;
+    uint32_t vertex_count;
+    uint32_t index_count;
 };
 
 bool t3d_serialize(const char* file_path, t3d::Model& model) {
@@ -65,6 +65,10 @@ bool t3d_parse(const char* file_path, t3d::Model& model) {
 
     file_desc desc;
     file.read((char*)&desc, sizeof(file_desc));
+
+    if (desc.version != T3D_VERSION) {
+        return true;
+    }
 
     for (int i = 0; i < desc.meshes_count; i++) {
         t3d::Mesh m;
