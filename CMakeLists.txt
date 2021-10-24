@@ -18,19 +18,16 @@ set(INCLUDE
     "lib/assimp/include"
     "lib/flags/include"
     "lib/glm"
-    "lib/json/single_include/nlohmann"
     "include"
     "lib/stb"
-    "lib/cpp-base64"
 )
 
-set(BASE64_SOURCES "lib/cpp-base64/base64.cpp")
 set(MAIN_SOURCES
-    "src/t3d_export.cpp"
+    "src/LoadModel.cpp"
     "src/Util.cpp"
     "src/Main.cpp"
 )
-set(SOURCES ${MAIN_SOURCES} ${BASE64_SOURCES})
+set(SOURCES ${MAIN_SOURCES})
 
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "")
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "If the supplementary tools for Assimp are built in addition to the library.")
