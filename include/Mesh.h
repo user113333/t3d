@@ -9,6 +9,6 @@ namespace t3d {
     struct Mesh {
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
-        std::vector<TextureCPU> textures;
+        std::vector<unsigned int> texture_indices;
     };
 }

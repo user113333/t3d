@@ -9,22 +9,43 @@
 
 using namespace t3d;
 
-static void LoadMaterialTextures(std::vector<TextureCPU>* textures, aiMaterial *mat, aiTextureType assimp_enum, unsigned int texture_enum) {
+int VTHasH(std::vector<TextureCPU>* textures, unsigned int hash) {
+    for (int i = 0; i < textures->size(); i++) {
+        if (textures->at(i).hash == hash) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static void LoadMaterialTextures(std::vector<TextureCPU>* textures, std::vector<unsigned int>* textures_indices, aiMaterial *mat, aiTextureType assimp_enum, TEXTURE_TYPE type) {
     for (unsigned int i = 0; i < mat->GetTextureCount(assimp_enum); i++) {
         aiString path;
         mat->GetTexture(assimp_enum, i, &path);
 
-        TextureCPU texture = LoadImageTT((working_dir + "/" + path.C_Str()).c_str());
-        texture.texture_type = texture_enum;
+        std::string full_path = (working_dir + "/" + path.C_Str());
+        unsigned long full_path_hash = HashStr((unsigned char*)full_path.c_str());
+        int index = VTHasH(textures, full_path_hash);
+
+        if (index == -1) {
+            TextureCPU texture = LoadImageTT(full_path.c_str());
+            
+            texture.type = type;
+            texture.hash = full_path_hash;
+
+            index = textures->size();
+            textures->push_back(texture);
+        }
         
-        textures->push_back(texture);
+        textures_indices->push_back(index);
     }
 }
 
-static Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene) {
+static Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene, Model* model) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    std::vector<TextureCPU> textures;
+    std::vector<unsigned int> texture_indices;
 
     for (int i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
@@ -58,15 +79,15 @@ static Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene) {
 
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-    LoadMaterialTextures(&textures, material, aiTextureType_DIFFUSE, TEXTURE_TYPE_BASE);
+    LoadMaterialTextures(&model->textures, &texture_indices, material, aiTextureType_DIFFUSE, TEXTURE_TYPE_BASE);
 
-    return { vertices, indices, textures };
+    return { vertices, indices, texture_indices };
 }
 
-static void ProcessNode(aiNode *node, const aiScene *scene, Model& model) {
+static void ProcessNode(aiNode *node, const aiScene *scene, Model* model) {
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        model.meshes.push_back(ProcessMesh(mesh, scene));
+        model->meshes.push_back(ProcessMesh(mesh, scene, model));
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
@@ -74,9 +95,9 @@ static void ProcessNode(aiNode *node, const aiScene *scene, Model& model) {
     }
 }
 
-void LoadModel(std::string const &path, Model& model) {
+void LoadModel(std::string const &path, Model* model) {
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_FlipUVs); // TODO: aiProcess_SortByPType -> lines + points
+    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs); // TODO: aiProcess_SortByPType -> lines + points
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         ERROR << importer.GetErrorString() << std::endl;

@@ -9,3 +9,5 @@ std::string GetSuffix(std::string& path);
 std::string GetBasename(std::string& path);
 
 t3d::TextureCPU LoadImageTT(const char* path);
+
+unsigned long HashStr(unsigned char *str);

@@ -12,7 +12,8 @@ namespace t3d {
         int chanel_count;
         int width;
         int height;
-        unsigned int texture_type;
+        TEXTURE_TYPE type;
+        unsigned long hash;
 
         unsigned char* data;
     };

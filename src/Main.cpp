@@ -10,11 +10,12 @@
 
 using namespace t3d;
 
-void LoadModel(std::string const &path, Model& model);
+void LoadModel(std::string const &path, Model* model);
 
 void ExportT3D(std::string& in_file, std::string& out_file) {
     Model model;
-    LoadModel(in_file, model);
+    
+    LoadModel(in_file, &model);
     
     t3d_serialize(out_file.c_str(), &model);
 }

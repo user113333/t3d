@@ -15,12 +15,13 @@ bool t3d_parse(const char* file_path, t3d::Model* model);
 struct file_desc {
     uint8_t version;
     uint16_t meshes_count;
+    uint16_t textures_count;
 };
 
 struct file_mesh {
     uint32_t vertex_count;
     uint32_t index_count;
-    uint32_t texture_count;
+    uint32_t texture_indices_count;
 };
 
 bool t3d_serialize(const char* file_path, t3d::Model* model) {
@@ -34,6 +35,7 @@ bool t3d_serialize(const char* file_path, t3d::Model* model) {
     file_desc desc;
     desc.version = T3D_VERSION;
     desc.meshes_count = model->meshes.size();
+    desc.textures_count = model->textures.size();
     file.write((char*)&desc, sizeof(file_desc));
 
     for (int i = 0; i < desc.meshes_count; i++) {
@@ -42,20 +44,22 @@ bool t3d_serialize(const char* file_path, t3d::Model* model) {
         file_mesh mesh;
         mesh.vertex_count = m->vertices.size();
         mesh.index_count = m->indices.size();
-        mesh.texture_count = m->textures.size();
+        mesh.texture_indices_count = m->texture_indices.size();
 
         file.write((char*)&mesh, sizeof(file_mesh));
         int size_v = mesh.vertex_count * sizeof(t3d::Vertex);
         file.write((char*)&m->vertices[0], size_v);
         int size_i = mesh.index_count * sizeof(unsigned int);
         file.write((char*)&m->indices[0], size_i);
-        
-        // Textures
-        for (int j = 0; j < m->textures.size(); j++) {
-            t3d::TextureCPU* tex = &m->textures[j];
-            file.write((char*)tex, offsetof(t3d::TextureCPU, data));
-            file.write((char*)tex->data, tex->width * tex->height * tex->chanel_count);
-        }
+        int size_t = mesh.texture_indices_count * sizeof(unsigned int);
+        file.write((char*)&m->texture_indices[0], size_t);
+    }
+
+    // Textures
+    for (int i = 0; i < desc.textures_count; i++) {
+        t3d::TextureCPU* tex = &model->textures[i];
+        file.write((char*)tex, offsetof(t3d::TextureCPU, data));
+        file.write((char*)tex->data, tex->width * tex->height * tex->chanel_count);
     }
 
     file.close();
@@ -92,19 +96,23 @@ bool t3d_parse(const char* file_path, t3d::Model* model) {
         m.indices.resize(mesh.index_count);
         file.read((char*)(&m.indices[0]), size_i);
 
-        // Textures
-        for (int j = 0; j < mesh.texture_count; j++) {
-            t3d::TextureCPU tex;
-            file.read((char*)&tex, offsetof(t3d::TextureCPU, data));
-
-            int data_size = tex.width * tex.height * tex.chanel_count;
-            tex.data = (unsigned char*)malloc(data_size);
-            file.read((char*)tex.data, data_size);
-
-            m.textures.push_back(tex);
-        }
+        int size_t = mesh.texture_indices_count * sizeof(unsigned int);
+        m.texture_indices.resize(mesh.texture_indices_count);
+        file.read((char*)(&m.texture_indices[0]), size_t);
 
         model->meshes.push_back(m);
+    }
+
+    // Textures
+    for (int i = 0; i < desc.textures_count; i++) {
+        t3d::TextureCPU tex;
+        file.read((char*)&tex, offsetof(t3d::TextureCPU, data));
+
+        int data_size = tex.width * tex.height * tex.chanel_count;
+        tex.data = (unsigned char*)malloc(data_size);
+        file.read((char*)tex.data, data_size);
+
+        model->textures.push_back(tex);
     }
 
     file.close();
