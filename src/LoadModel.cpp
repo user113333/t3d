@@ -2,12 +2,26 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include <glm/glm.hpp>
+#include <glm/mat4x4.hpp>
+
 #include "Model.h"
 #include "Vertex.h"
 #include "Core.h"
 #include "Util.h"
 
 using namespace t3d;
+
+aiMatrix4x4 ReadNodeHeirarchy(aiNode* node) {
+    aiMatrix4x4 child = node->mTransformation;
+    
+    aiNode* parent = node;
+    while ((parent = parent->mParent) != nullptr) {
+        child = parent->mTransformation * child;
+    }
+
+    return child;
+}
 
 int VTHasH(std::vector<TextureCPU>* textures, unsigned int hash) {
     for (int i = 0; i < textures->size(); i++) {
@@ -42,17 +56,25 @@ static void LoadMaterialTextures(std::vector<TextureCPU>* textures, std::vector<
     }
 }
 
-static Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene, Model* model) {
+static Mesh ProcessMesh(aiMesh *mesh, glm::mat4 mesh_transform, const aiScene *scene, Model* model) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<unsigned int> texture_indices;
 
-    for (int i = 0; i < mesh->mNumVertices; i++) {
+    for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
 
-        vertex.pos.x = mesh->mVertices[i].x;
-        vertex.pos.y = mesh->mVertices[i].y;
-        vertex.pos.z = mesh->mVertices[i].z;
+        glm::vec4 vector;
+        vector.x = mesh->mVertices[i].x;
+        vector.y = mesh->mVertices[i].y;
+        vector.z = mesh->mVertices[i].z;
+        vector.w = 1.0f;
+
+        vector = mesh_transform * vector;
+        
+        vertex.pos.x = vector.x;
+        vertex.pos.y = vector.y;
+        vertex.pos.z = vector.z;
 
         if (mesh->mTextureCoords[0]) {
             glm::vec2 vec;
@@ -78,16 +100,18 @@ static Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene, Model* model) {
     }
 
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
+    
     LoadMaterialTextures(&model->textures, &texture_indices, material, aiTextureType_DIFFUSE, TEXTURE_TYPE_BASE);
-
+ 
     return { vertices, indices, texture_indices };
 }
 
 static void ProcessNode(aiNode *node, const aiScene *scene, Model* model) {
+    aiMatrix4x4 mesh_transform = ReadNodeHeirarchy(node);
+
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        model->meshes.push_back(ProcessMesh(mesh, scene, model));
+        model->meshes.push_back(ProcessMesh(mesh, CastMat4(mesh_transform), scene, model));
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {

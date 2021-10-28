@@ -49,7 +49,7 @@ t3d::TextureCPU LoadImageTT(const char* path) {
     t3d::TextureCPU tex;
 
     int x, y, ch_count;
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
     unsigned char* data = stbi_load(path, &x, &y, &ch_count, 0);
 
     tex.chanel_count = ch_count;
