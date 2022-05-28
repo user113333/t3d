@@ -45,8 +45,8 @@ std::string GetBasename(std::string& path) {
     return name.substr(0, lo);
 }
 
-t3d::TextureCPU LoadImageTT(const char* path) {
-    t3d::TextureCPU tex;
+t3d::Texture LoadImageTT(const char* path) {
+    t3d::Texture tex;
 
     int x, y, ch_count;
     stbi_set_flip_vertically_on_load(false);
@@ -56,17 +56,9 @@ t3d::TextureCPU LoadImageTT(const char* path) {
     tex.width = x;
     tex.height = y;
 
+    std::string s = std::string(path);
+    tex.name = GetNotDir(s);;
     tex.data = data;
 
     return tex;
-}
-
-unsigned long HashStr(unsigned char *str) {
-    unsigned long hash = 5381;
-    int c;
-
-    while (c = *str++)
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-
-    return hash;
 }

@@ -5,10 +5,11 @@
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "Model.h"
-#include "Vertex.h"
-#include "Core.h"
+#include <string>
+
 #include "Util.h"
+#include "t3d.h"
+#include "Core.h"
 
 using namespace t3d;
 
@@ -23,9 +24,9 @@ aiMatrix4x4 ReadNodeHeirarchy(aiNode* node) {
     return child;
 }
 
-int VTHasH(std::vector<TextureCPU>* textures, unsigned int hash) {
+int VTHasN(std::vector<Texture>* textures, const char* name) {
     for (int i = 0; i < textures->size(); i++) {
-        if (textures->at(i).hash == hash) {
+        if (textures->at(i).name.compare(name) == 0) {
             return i;
         }
     }
@@ -33,33 +34,30 @@ int VTHasH(std::vector<TextureCPU>* textures, unsigned int hash) {
     return -1;
 }
 
-static void LoadMaterialTextures(std::vector<TextureCPU>* textures, std::vector<unsigned int>* textures_indices, aiMaterial *mat, aiTextureType assimp_enum, TEXTURE_TYPE type) {
+static int LoadMaterialTextures(aiMaterial *mat, std::vector<Texture>* textures, aiTextureType assimp_enum) {
+    int index = -1;
+
     for (unsigned int i = 0; i < mat->GetTextureCount(assimp_enum); i++) {
         aiString path;
         mat->GetTexture(assimp_enum, i, &path);
 
         std::string full_path = (working_dir + "/" + path.C_Str());
-        unsigned long full_path_hash = HashStr((unsigned char*)full_path.c_str());
-        int index = VTHasH(textures, full_path_hash);
+        index = VTHasN(textures, GetNotDir(full_path).c_str());
 
         if (index == -1) {
-            TextureCPU texture = LoadImageTT(full_path.c_str());
-            
-            texture.type = type;
-            texture.hash = full_path_hash;
+            Texture texture = LoadImageTT(full_path.c_str());
 
             index = textures->size();
             textures->push_back(texture);
         }
-        
-        textures_indices->push_back(index);
     }
+
+    return index;
 }
 
 static Mesh ProcessMesh(aiMesh *mesh, glm::mat4 mesh_transform, const aiScene *scene, Model* model) {
     std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    std::vector<unsigned int> texture_indices;
+    std::vector<uint32_t> indices;
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
@@ -76,13 +74,16 @@ static Mesh ProcessMesh(aiMesh *mesh, glm::mat4 mesh_transform, const aiScene *s
         vertex.pos.y = vector.y;
         vertex.pos.z = vector.z;
 
+        vertex.normal.x = mesh->mNormals[i].x;
+        vertex.normal.y = mesh->mNormals[i].y;
+        vertex.normal.z = mesh->mNormals[i].z;
+
         if (mesh->mTextureCoords[0]) {
-            glm::vec2 vec;
-            vec.x = mesh->mTextureCoords[0][i].x; 
-            vec.y = mesh->mTextureCoords[0][i].y;
-            vertex.texture_coords = vec;
+            vertex.texture_uv.x = mesh->mTextureCoords[0][i].x; 
+            vertex.texture_uv.y = mesh->mTextureCoords[0][i].y;
         } else {
-            vertex.texture_coords = glm::vec2(0.0f, 0.0f);  
+            vertex.texture_uv.x = 0;
+            vertex.texture_uv.y = 0;
         }
 
         vertices.push_back(vertex);
@@ -101,9 +102,23 @@ static Mesh ProcessMesh(aiMesh *mesh, glm::mat4 mesh_transform, const aiScene *s
 
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
     
-    LoadMaterialTextures(&model->textures, &texture_indices, material, aiTextureType_DIFFUSE, TEXTURE_TYPE_BASE);
+    t3d::Mesh t3d_mesh;
+
+    t3d_mesh.vertices = vertices;
+    t3d_mesh.indices = indices;
+
+    // TODO: aiTextureType_DISPLACEMENT
+    t3d_mesh.textures[TEXTURE_TYPE_BASE] = LoadMaterialTextures(material, &model->textures, aiTextureType_DIFFUSE);
+    t3d_mesh.textures[TEXTURE_TYPE_NORMAL] = LoadMaterialTextures(material, &model->textures, aiTextureType_NORMALS);
+    t3d_mesh.textures[TEXTURE_TYPE_ROUGHNESS] = LoadMaterialTextures(material, &model->textures, aiTextureType_SHININESS);
+    t3d_mesh.textures[TEXTURE_TYPE_METAL] = LoadMaterialTextures(material, &model->textures, aiTextureType_METALNESS);
+    t3d_mesh.textures[TEXTURE_TYPE_SPECULAR] = LoadMaterialTextures(material, &model->textures, aiTextureType_SPECULAR);
+    t3d_mesh.textures[TEXTURE_TYPE_HEIGHT] = LoadMaterialTextures(material, &model->textures, aiTextureType_HEIGHT);
+    t3d_mesh.textures[TEXTURE_TYPE_OPACITY] = LoadMaterialTextures(material, &model->textures, aiTextureType_OPACITY);
+    t3d_mesh.textures[TEXTURE_TYPE_AMBIENT] = LoadMaterialTextures(material, &model->textures, aiTextureType_AMBIENT);
+    t3d_mesh.textures[TEXTURE_TYPE_SELF_ILLUMINATION] = LoadMaterialTextures(material, &model->textures, aiTextureType_EMISSIVE);
  
-    return { vertices, indices, texture_indices };
+    return t3d_mesh;
 }
 
 static void ProcessNode(aiNode *node, const aiScene *scene, Model* model) {
@@ -119,7 +134,7 @@ static void ProcessNode(aiNode *node, const aiScene *scene, Model* model) {
     }
 }
 
-void LoadModel(std::string const &path, Model* model) {
+void LoadModel(std::string const &path, t3d::Model* model) {
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs); // TODO: aiProcess_SortByPType -> lines + points
 
@@ -129,4 +144,6 @@ void LoadModel(std::string const &path, Model* model) {
     }
 
     ProcessNode(scene->mRootNode, scene, model);
+
+    model->version = T3D_VERSION;
 }

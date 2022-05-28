@@ -6,7 +6,6 @@
 #include "t3d.h"
 #include "Core.h"
 #include "Util.h"
-#include "Model.h"
 
 using namespace t3d;
 
@@ -17,7 +16,7 @@ void ExportT3D(std::string& in_file, std::string& out_file) {
     
     LoadModel(in_file, &model);
     
-    t3d_serialize(out_file.c_str(), &model);
+    Serialize(out_file.c_str(), &model);
 }
 
 int main(int argc, char** argv) {

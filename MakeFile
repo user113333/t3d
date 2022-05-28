@@ -6,5 +6,8 @@ release:
 	cmake -DCMAKE_BUILD_TYPE=Release -G Ninja -B ./bin .
 	ninja -C bin
 
+run: 
+	bin/t3d.exe bin/res/test/scene.gltf
+
 copy:
 	xcopy /S /I /Y /F "res" "bin/res"
