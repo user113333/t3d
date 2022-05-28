@@ -16,6 +16,10 @@ void ExportT3D(std::string& in_file, std::string& out_file) {
     
     LoadModel(in_file, &model);
     
+    if (model.version == -1) {
+        return;
+    }
+    
     Serialize(out_file.c_str(), &model);
 }
 

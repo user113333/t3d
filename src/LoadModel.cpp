@@ -140,6 +140,7 @@ void LoadModel(std::string const &path, t3d::Model* model) {
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         ERROR << importer.GetErrorString() << std::endl;
+        model->version = -1;
         return;
     }
 

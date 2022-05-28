@@ -97,12 +97,20 @@ namespace t3d {
         unsigned char* data;
 
         friend std::ostream& operator<<(std::ostream& out, Bits<class Texture& > my) {
-            out << bits(my.t.chanel_count) << bits(my.t.width) << bits(my.t.height) << bits(my.t.name) << bits(my.t.data);
+            out << bits(my.t.chanel_count) << bits(my.t.width) << bits(my.t.height) << bits(my.t.name);
+
+            out.write((char*)my.t.data, my.t.width * my.t.height * my.t.chanel_count);
+
             return (out);
         }
 
         friend std::istream& operator>>(std::istream& in, Bits<class Texture&> my) {
-            in >> bits(my.t.chanel_count) >> bits(my.t.width) >> bits(my.t.height) >> bits(my.t.name) >> bits(my.t.data);
+            in >> bits(my.t.chanel_count) >> bits(my.t.width) >> bits(my.t.height) >> bits(my.t.name);
+
+            int data_size = my.t.width * my.t.height * my.t.chanel_count;
+            my.t.data = (unsigned char*)malloc(data_size);
+            in.read((char*)my.t.data, data_size);
+
             return (in);
         }
     };

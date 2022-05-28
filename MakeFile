@@ -7,7 +7,7 @@ release:
 	ninja -C bin
 
 run: 
-	bin/t3d.exe bin/res/test/scene.gltf
+	bin/t3d.exe bin/res/skull/scene.gltf
 
 copy:
 	xcopy /S /I /Y /F "res" "bin/res"
